@@ -4,8 +4,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+# Copy the entire prisma directory (not just schema)
+COPY prisma/ ./prisma/
+
+# Install dependencies
+RUN npm ci
 
 COPY . .
 
-CMD [ "npm", "run", "start:dev" ]
+CMD [ "npm", "run", "start:prod" ]
