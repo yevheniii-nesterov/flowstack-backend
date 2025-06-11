@@ -1,12 +1,22 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { TasksModule } from './tasks/tasks.module';
+import { DatabaseModule } from './database/database.module';
+import { authConfig } from './config/auth.config';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [AuthModule, TasksModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [authConfig],
+      //validationSchema: appConfigSchema,
+      validationOptions: {
+        // allowUnknown: false,
+        abortEarly: true,
+      },
+    }),
+    DatabaseModule,
+    AuthModule,
+  ],
 })
 export class AppModule {}
