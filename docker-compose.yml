@@ -1,0 +1,67 @@
+name: flowstack
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - flowstack-network
+
+  # NestJS Application
+  nestjs:
+    build:
+      context: ./flowstack-backend
+      dockerfile: Dockerfile
+    container_name: nestjs_app
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - ./flowstack-backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - flowstack-network
+    depends_on:
+      - postgres
+
+  # Adminer - Database Management
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - flowstack-network
+    depends_on:
+      - postgres
+
+  # Portainer - Docker Management
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./portainer-data:/data
+    ports:
+      - "9000:9000"
+    networks:
+      - flowstack-network
+
+networks:
+  flowstack-network:
+    driver: bridge
