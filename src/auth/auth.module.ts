@@ -3,8 +3,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypedConfigService } from '../config/typed-config.service';
 import { AuthConfig } from '../config/auth.config';
-//import { AuthGuard } from '../common/guards/auth.guard';
 import { PasswordService } from './password.service';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { AuthRepository } from './auth.repository';
 
 @Module({
   imports: [
@@ -19,7 +21,8 @@ import { PasswordService } from './password.service';
       }),
     }),
   ],
-  providers: [/*AuthGuard, */PasswordService],
-  exports: [/*AuthGuard, */JwtModule, PasswordService],
+  controllers: [AuthController],
+  providers: [/*AuthGuard, */ PasswordService, AuthRepository, AuthService],
+  exports: [/*AuthGuard, */ JwtModule, PasswordService],
 })
-export class AuthenticationModule {}
+export class AuthModule {}
