@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { PasswordService } from './password.service';
@@ -22,11 +26,11 @@ export class AuthService {
   async loginUser(credentials: LoginUserArgs): Promise<JwtResponse> {
     const user = await this.authRepository.getUserByEmail(credentials.email);
 
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('Невірний логін або пароль');
     if (
       !(await this.passwordService.verify(credentials.password, user.password))
     ) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Невірний логін або пароль');
     }
 
     return this.generateToken(user);
@@ -37,10 +41,16 @@ export class AuthService {
       credentials.password,
     );
 
-    return this.authRepository.registerUser({
-      ...credentials,
-      password: hashedPassword,
-    });
+    await this.authRepository
+      .registerUser({
+        ...credentials,
+        password: hashedPassword,
+      })
+      .catch((e: Prisma.PrismaClientKnownRequestError) => {
+        if (e.code === 'P2002') {
+          throw new BadRequestException('Користувач з цією поштою вже існує');
+        }
+      });
   }
 
   private generateToken(user: Prisma.UsersWhereInput): JwtResponse {
